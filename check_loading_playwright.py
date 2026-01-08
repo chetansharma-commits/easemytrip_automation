@@ -6,7 +6,7 @@ import asyncio
 def install_playwright():
     """Installs Playwright and its browsers if not already installed."""
     try:
-         #    __import__('playwright')
+         ###    __import__('playwright')
         __import__('playwright')
     except ImportError:
         print("Playwright not found. Installing...")

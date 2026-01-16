@@ -71,38 +71,73 @@ def test_tc_005_click_search_button(setup):
     page.wait_for_timeout(3000)
     print('✅ Seat layout opened\n')
     
-    # STEP 6: Select only ONE available seat
+    # STEP 6: Select any ONE available seat (DYNAMIC - avoid booked/grey seats)
     print('📍 Selecting any available seat...')
     
     seat_clicked = False
     
-    try:
-        # Wait until seats appear
-        page.wait_for_selector('[class*="avail"]', timeout=10000)
-        
-        seats = page.locator('[class*="avail"]')
-        total = seats.count()
-        print(f'   Found {total} available seats')
-        
-        for i in range(total):
-            seat = seats.nth(i)
-            
-            # Click only visible seat
-            if seat.is_visible():
-                seat_text = seat.text_content()
-                print(f'   Clicking seat: {seat_text}')
-                seat.click(force=True)
-                page.wait_for_timeout(1500)
-                
-                print('✅ ONE SEAT SELECTED\n')
-                seat_clicked = True
-                break   # 🔥 VERY IMPORTANT — ONLY ONE SEAT
+    # Try multiple strategies to find and select available seats only
+    strategies = [
+        # Strategy 1: Available class seats
+        {
+            'selector': '[class*="avail"]:not([class*="booked"]):not([class*="grey"]):not([class*="disabled"])',
+            'name': 'Available seats'
+        },
+        # Strategy 2: ng-click seats that are available
+        {
+            'selector': '[ng-click*="SelectSeat"]:not([class*="booked"]):not([class*="grey"])',
+            'name': 'Clickable available seats'
+        },
+        # Strategy 3: Seats with specific available status
+        {
+            'selector': '.seat.available, .available-seat',
+            'name': 'Available seat class'
+        },
+        # Strategy 4: Visible seats excluding booked ones
+        {
+            'selector': '[class*="seat"]:not([class*="booked"]):not([class*="grey"]):not([class*="blocked"])',
+            'name': 'Non-booked seats'
+        }
+    ]
     
-    except Exception as e:
-        print(f'⚠️ Error selecting seat: {e}\n')
+    for strategy in strategies:
+        if seat_clicked:
+            break
+            
+        try:
+            page.wait_for_timeout(1000)
+            seats = page.locator(strategy['selector'])
+            total = seats.count()
+            
+            if total > 0:
+                # Try first few visible seats
+                for i in range(min(total, 5)):
+                    try:
+                        seat = seats.nth(i)
+                        
+                        if seat.is_visible(timeout=1000):
+                            # Check if seat is really available (not grey/disabled)
+                            seat_classes = seat.get_attribute('class') or ''
+                            
+                            # Skip if seat has booked/grey/disabled in class
+                            if any(word in seat_classes.lower() for word in ['booked', 'grey', 'disabled', 'blocked', 'unavailable']):
+                                continue
+                            
+                            seat.click(force=True)
+                            page.wait_for_timeout(1500)
+                            print('✅ ONE SEAT SELECTED\n')
+                            seat_clicked = True
+                            break
+                    except:
+                        continue
+                
+                if seat_clicked:
+                    break
+        except:
+            continue
     
     if not seat_clicked:
-        print('⚠️ No seat selected\n')
+        print('⚠️ No available seat selected\n')
     
     # STEP 7 & 8: Boarding and Dropping
     print('📍 Selecting BOARDING & DROPPING points...')
@@ -113,7 +148,6 @@ def test_tc_005_click_search_button(setup):
         # Find all clickable labels with ng-click
         labels = page.locator('label[ng-click]')
         label_count = labels.count()
-        print(f'   Found {label_count} clickable options')
         
         boarding_clicked = False
         dropping_clicked = False
@@ -131,11 +165,11 @@ def test_tc_005_click_search_button(setup):
                     if not boarding_clicked:
                         print('✅ BOARDING POINT SELECTED!')
                         boarding_clicked = True
-                        page.wait_for_timeout(1000)
+                        page.wait_for_timeout(500)
                     elif not dropping_clicked:
                         print('✅ DROPPING POINT SELECTED!\n')
                         dropping_clicked = True
-                        page.wait_for_timeout(1000)
+                        page.wait_for_timeout(500)
                         break
             except:
                 continue
@@ -374,17 +408,13 @@ def test_tc_005_click_search_button(setup):
         
         # Try multiple selectors for mobile field (avoid country code dropdown)
         mobile_selectors = [
-            'input[type="tel"]:not([name*="country"]):not([id*="country"])',
-            'input[name*="mobile"]:not([name*="country"])',
-            'input[name*="phone"]:not([name*="country"])',
-            'input[name*="Mobile"]:not([name*="country"])',
-            'input[name*="Phone"]:not([name*="country"])',
-            'input[id*="mobile"]:not([id*="country"])',
-            'input[id*="phone"]:not([id*="country"])',
-            'input[placeholder*="mobile"]',
-            'input[placeholder*="Mobile"]',
-            'input[placeholder*="Phone"]',
-            'input[maxlength="10"][type="tel"]'
+            'input[maxlength="10"][type="tel"]',
+            'input[name*="mobile"]:not([name*="country"]):not([maxlength="3"])',
+            'input[name*="Mobile"]:not([name*="country"]):not([maxlength="3"])',
+            'input[id*="mobile"]:not([id*="country"]):not([maxlength="3"])',
+            'input[placeholder*="mobile"]:not([maxlength="3"])',
+            'input[placeholder*="Mobile Number"]',
+            'input[type="tel"]:not([name*="country"]):not([id*="country"]):not([maxlength="3"])'
         ]
         
         mobile_filled = False
@@ -397,6 +427,11 @@ def test_tc_005_click_search_button(setup):
                     mobile_field = mobile_fields.nth(i)
                     try:
                         if mobile_field.is_visible(timeout=1000):
+                            # Check maxlength to avoid country code field (usually maxlength=3 or 4)
+                            maxlength = mobile_field.get_attribute('maxlength')
+                            if maxlength and int(maxlength) < 8:
+                                continue
+                            
                             # Check if field is editable and not a dropdown
                             field_type = mobile_field.get_attribute('type')
                             if field_type in ['tel', 'text', 'number']:
@@ -404,10 +439,8 @@ def test_tc_005_click_search_button(setup):
                                 mobile_field.click()
                                 page.wait_for_timeout(300)
                                 
-                                # Clear field with triple click and backspace
-                                mobile_field.click(click_count=3)
-                                page.wait_for_timeout(200)
-                                mobile_field.press('Backspace')
+                                # Clear field completely
+                                mobile_field.fill('')
                                 page.wait_for_timeout(200)
                                 
                                 # Type the number
@@ -417,7 +450,7 @@ def test_tc_005_click_search_button(setup):
                                 # Verify it was entered
                                 value = mobile_field.input_value()
                                 if '8445121366' in value or '844512' in value:
-                                    print(f'✅ Mobile number filled: 8445121366 (selector: {selector})\n')
+                                    print(f'✅ Mobile number filled: 8445121366\n')
                                     mobile_filled = True
                                     break
                     except:

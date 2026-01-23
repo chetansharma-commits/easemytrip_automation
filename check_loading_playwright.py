@@ -537,4 +537,90 @@ def test_tc_005_click_search_button(setup):
     except Exception as e:
         print(f'⚠️ Error clicking continue: {e}\n')
     
+    # STEP 16: Click on Wallet option
+    print('📍 Selecting Wallet payment option...')
+    try:
+        page.wait_for_timeout(5000)
+        
+        # Scroll to payment section
+        page.evaluate('window.scrollTo(0, 0)')
+        page.wait_for_timeout(300)
+        page.evaluate('window.scrollBy(0, 400)')
+        page.wait_for_timeout(200)
+        
+        # Debug: Print all available payment options
+        print('   --- Available payment options ---')
+        try:
+            all_lis = page.locator('li').all()
+            for idx, li in enumerate(all_lis[:20]):  # Check first 20 li elements
+                try:
+                    text = li.text_content() or ''
+                    if any(word in text.lower() for word in ['payment', 'wallet', 'card', 'upi', 'net']):
+                        print(f'   Li {idx}: {text[:80]}')
+                except:
+                    pass
+        except:
+            pass
+        print('   --- End of payment options ---')
+        
+        # Take screenshot
+        page.screenshot(path='payment-options.png')
+        
+        wallet_clicked = False
+        
+        # Try to find and click Wallet
+        try:
+            # Method 1: Find by exact text match
+            wallet_element = page.get_by_role('listitem').filter(has_text='Wallet').first
+            if wallet_element:
+                wallet_element.click(force=True, timeout=3000)
+                page.wait_for_timeout(200)
+                print('✅ Wallet option selected\n')
+                wallet_clicked = True
+        except Exception as e:
+            print(f'   Method 1 failed: {str(e)[:100]}')
+        
+        if not wallet_clicked:
+            print('⚠️ Wallet option not clickable or not found\n')
+        
+        page.wait_for_timeout(200)
+        
+    except Exception as e:
+        print(f'⚠️ Error selecting wallet: {e}\n')
+    
+    # STEP 17: Select Bajaj Pay
+    print('📍 Selecting Bajaj Pay...')
+    try:
+        page.wait_for_timeout(200)
+        
+        bajaj_selectors = [
+            'label:has-text("Bajaj")',
+            'div:has-text("Bajaj Pay")',
+            'span:has-text("Bajaj")',
+            'input[value*="Bajaj"][type="radio"]',
+            'input[value*="bajaj"][type="radio"]',
+            '[id*="bajaj"]',
+            '[name*="bajaj"]'
+        ]
+        
+        bajaj_clicked = False
+        for selector in bajaj_selectors:
+            try:
+                bajaj_option = page.locator(selector).first
+                if bajaj_option.is_visible(timeout=2000):
+                    bajaj_option.click(force=True)
+                    print('✅ Bajaj Pay selected\n')
+                    bajaj_clicked = True
+                    break
+            except:
+                continue
+        
+        if not bajaj_clicked:
+            print('⚠️ Bajaj Pay option not found\n')
+        
+        page.wait_for_timeout(200)
+        
+    except Exception as e:
+        print(f'⚠️ Error selecting Bajaj Pay: {e}\n')
+    
     print('🎉 === BOOKING FLOW COMPLETED ===\n')

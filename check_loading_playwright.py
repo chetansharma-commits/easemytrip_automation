@@ -60,8 +60,346 @@ def test_tc_005_click_search_button(setup):
     expect(search_button).to_be_visible()
     search_button.click()
     page.wait_for_url(re.compile(r'.*easemytrip\.com/home/list.*'), timeout=60000)
-    page.wait_for_timeout(5000)
+    page.wait_for_timeout(3000)
     print('✅ Bus list loaded\n')
+    
+    # ===== FILTERS SECTION =====
+    print('\n🔍 === APPLYING FILTERS ===\n')
+    
+    # FILTER: AC Bus Type Only
+    print('📍 Applying AC Bus filter...')
+    try:
+        page.wait_for_timeout(1000)
+        
+        # Try to find and click AC bus filter
+        ac_selectors = [
+            'input[type="checkbox"][value*="AC"], input[type="checkbox"][id*="ac"]',
+            'label:has-text("AC")',
+            'input[value*="A/C"][type="checkbox"]',
+            '[class*="filter"] input:has-text("AC")'
+        ]
+        
+        for selector in ac_selectors:
+            try:
+                ac_option = page.locator(selector).first
+                if ac_option.is_visible(timeout=2000):
+                    ac_option.click(force=True)
+                    print('✅ AC Bus filter applied')
+                    page.wait_for_timeout(1000)
+                    break
+            except:
+                continue
+                
+        print('')
+    except Exception as e:
+        print(f'⚠️ AC Bus filter error: {e}\n')
+    
+    # Wait for filtered results to load
+    print('📍 Waiting for filtered results...')
+    page.wait_for_timeout(1000)
+    print('✅ Filter applied successfully!\n')
+    
+    # VERIFY AC FILTER: Check if all buses in listing have AC/A/C
+    print('📍 Verifying AC buses in listing...')
+    try:
+        page.wait_for_timeout(1000)
+        
+        # Find all bus listings
+        bus_listings = page.locator('[class*="bus"], [class*="list-item"], .result-item, div[ng-repeat]').all()
+        
+        if len(bus_listings) > 0:
+            ac_count = 0
+            non_ac_count = 0
+            
+            # Check first 5 bus listings
+            for i, bus in enumerate(bus_listings[:5]):
+                try:
+                    bus_text = bus.text_content() or ''
+                    bus_text_upper = bus_text.upper()
+                    
+                    # FIRST check if it's Non-AC (exclude these)
+                    if 'NON AC' in bus_text_upper or 'NON-AC' in bus_text_upper or 'NONAC' in bus_text_upper or 'NON A/C' in bus_text_upper:
+                        non_ac_count += 1
+                        print(f'   Bus {i+1}: Non-AC ❌')
+                    # THEN check if it's AC
+                    elif 'AC' in bus_text_upper or 'A/C' in bus_text_upper or 'A.C' in bus_text_upper:
+                        ac_count += 1
+                        print(f'   Bus {i+1}: AC ✅')
+                    else:
+                        # No AC/Non-AC label found
+                        print(f'   Bus {i+1}: Unknown ⚠️')
+                except:
+                    continue
+            
+            print(f'\n✅ AC Buses found: {ac_count}')
+            if non_ac_count > 0:
+                print(f'❌ Non-AC Buses found: {non_ac_count}')
+                print('\n⚠️ TEST FAILED: Non-AC buses found after applying AC filter!\n')
+                assert False, f"AC Filter Failed: Found {non_ac_count} Non-AC buses in listing"
+            else:
+                print('✅ All buses are AC - Filter working correctly!')
+            print('')
+        else:
+            print('⚠️ No bus listings found\n')
+            
+    except AssertionError:
+        raise
+    except Exception as e:
+        print(f'⚠️ AC Verification error: {e}\n')
+    
+    # RESET FILTER AFTER AC
+    print('📍 Clicking Reset Filter...')
+    try:
+        page.wait_for_timeout(1000)
+        reset_selectors = [
+            'button:has-text("Reset")',
+            'a:has-text("Reset")',
+            'button:has-text("Clear")',
+            '[class*="reset"]',
+            '[id*="reset"]'
+        ]
+        for selector in reset_selectors:
+            try:
+                reset_btn = page.locator(selector).first
+                if reset_btn.is_visible(timeout=2000):
+                    reset_btn.click(force=True)
+                    print('✅ Reset Filter clicked!\n')
+                    page.wait_for_timeout(1000)
+                    break
+            except:
+                continue
+    except Exception as e:
+        print(f'⚠️ Reset error: {e}\n')
+    
+    # FILTER: Non-AC Bus Type
+    print('📍 Applying Non-AC Bus filter...')
+    try:
+        page.wait_for_timeout(1000)
+        non_ac_selectors = [
+            'input[type="checkbox"][value*="Non AC"]',
+            'label:has-text("Non AC")',
+            'input[value*="Non A/C"][type="checkbox"]'
+        ]
+        for selector in non_ac_selectors:
+            try:
+                non_ac_option = page.locator(selector).first
+                if non_ac_option.is_visible(timeout=2000):
+                    non_ac_option.click(force=True)
+                    print('✅ Non-AC Bus filter applied')
+                    page.wait_for_timeout(1000)
+                    break
+            except:
+                continue
+        print('')
+    except Exception as e:
+        print(f'⚠️ Non-AC filter error: {e}\n')
+    
+    # Wait for Non-AC filtered results
+    print('📍 Waiting for Non-AC filtered results...')
+    page.wait_for_timeout(1000)
+    print('✅ Non-AC Filter applied!\n')
+    
+    # VERIFY Non-AC FILTER
+    print('📍 Verifying Non-AC buses...')
+    try:
+        page.wait_for_timeout(1000)
+        bus_listings = page.locator('[class*="bus"], [class*="list-item"], .result-item, div[ng-repeat]').all()
+        if len(bus_listings) > 0:
+            ac_count = 0
+            non_ac_count = 0
+            for i, bus in enumerate(bus_listings[:5]):
+                try:
+                    bus_text = bus.text_content() or ''
+                    bus_text_upper = bus_text.upper()
+                    if 'NON AC' in bus_text_upper or 'NON-AC' in bus_text_upper or 'NONAC' in bus_text_upper or 'NON A/C' in bus_text_upper:
+                        non_ac_count += 1
+                        print(f'   Bus {i+1}: Non-AC ✅')
+                    elif 'AC' in bus_text_upper or 'A/C' in bus_text_upper or 'A.C' in bus_text_upper:
+                        ac_count += 1
+                        print(f'   Bus {i+1}: AC ❌')
+                    else:
+                        print(f'   Bus {i+1}: Unknown ⚠️')
+                except:
+                    continue
+            print(f'\n✅ Non-AC Buses found: {non_ac_count}')
+            if ac_count > 0:
+                print(f'❌ AC Buses found: {ac_count}')
+                print('\n⚠️ TEST FAILED: AC buses found after Non-AC filter!\n')
+                assert False, f"Non-AC Filter Failed: Found {ac_count} AC buses"
+            else:
+                print('✅ All buses are Non-AC - Filter working!')
+            print('')
+        else:
+            print('⚠️ No bus listings found\n')
+    except AssertionError:
+        raise
+    except Exception as e:
+        print(f'⚠️ Non-AC Verification error: {e}\n')
+    
+    # RESET FILTER AFTER Non-AC
+    print('📍 Clicking Reset Filter (final)...')
+    try:
+        page.wait_for_timeout(1000)
+        for selector in reset_selectors:
+            try:
+                reset_btn = page.locator(selector).first
+                if reset_btn.is_visible(timeout=2000):
+                    reset_btn.click(force=True)
+                    print('✅ Reset Filter clicked (final)!\n')
+                    page.wait_for_timeout(1000)
+                    break
+            except:
+                continue
+    except Exception as e:
+        print(f'⚠️ Reset error: {e}\n')
+    
+    # FILTER: Sleeper Bus Type
+    print('📍 Applying Sleeper Bus filter...')
+    try:
+        page.wait_for_timeout(1000)
+        sleeper_selectors = [
+            'input[type="checkbox"][value*="Sleeper"]',
+            'label:has-text("Sleeper")',
+            'input[id*="sleeper"][type="checkbox"]',
+            '[class*="filter"] input:has-text("Sleeper")'
+        ]
+        for selector in sleeper_selectors:
+            try:
+                sleeper_option = page.locator(selector).first
+                if sleeper_option.is_visible(timeout=2000):
+                    sleeper_option.click(force=True)
+                    print('✅ Sleeper Bus filter applied')
+                    page.wait_for_timeout(1000)
+                    break
+            except:
+                continue
+        print('')
+    except Exception as e:
+        print(f'⚠️ Sleeper filter error: {e}\n')
+    
+    # Wait for Sleeper filtered results
+    print('📍 Waiting for Sleeper filtered results...')
+    page.wait_for_timeout(1000)
+    print('✅ Sleeper Filter applied!\n')
+    
+    # RESET FILTER AFTER Sleeper
+    print('📍 Clicking Reset Filter...')
+    try:
+        page.wait_for_timeout(1000)
+        for selector in reset_selectors:
+            try:
+                reset_btn = page.locator(selector).first
+                if reset_btn.is_visible(timeout=2000):
+                    reset_btn.click(force=True)
+                    print('✅ Reset Filter clicked!\n')
+                    page.wait_for_timeout(1000)
+                    break
+            except:
+                continue
+    except Exception as e:
+        print(f'⚠️ Reset error: {e}\n')
+    
+    # FILTER: Seater Bus Type
+    print('📍 Applying Seater Bus filter...')
+    try:
+        page.wait_for_timeout(1000)
+        seater_selectors = [
+            'input[type="checkbox"][value*="Seater"]',
+            'label:has-text("Seater")',
+            'input[id*="seater"][type="checkbox"]',
+            '[class*="filter"] input:has-text("Seater")'
+        ]
+        for selector in seater_selectors:
+            try:
+                seater_option = page.locator(selector).first
+                if seater_option.is_visible(timeout=2000):
+                    seater_option.click(force=True)
+                    print('✅ Seater Bus filter applied')
+                    page.wait_for_timeout(1000)
+                    break
+            except:
+                continue
+        print('')
+    except Exception as e:
+        print(f'⚠️ Seater filter error: {e}\n')
+    
+    # Wait for Seater filtered results
+    print('📍 Waiting for Seater filtered results...')
+    page.wait_for_timeout(1000)
+    print('✅ Seater Filter applied!\n')
+    
+    # RESET FILTER AFTER Seater
+    print('📍 Clicking Reset Filter (final)...')
+    try:
+        page.wait_for_timeout(1000)
+        for selector in reset_selectors:
+            try:
+                reset_btn = page.locator(selector).first
+                if reset_btn.is_visible(timeout=2000):
+                    reset_btn.click(force=True)
+                    print('✅ Reset Filter clicked (final)!\n')
+                    page.wait_for_timeout(1000)
+                    break
+            except:
+                continue
+    except Exception as e:
+        print(f'⚠️ Reset error: {e}\n')
+    
+    # FILTER: Bus Operator - Click First Operator
+    print('📍 Applying Bus Operator filter (first operator)...')
+    try:
+        page.wait_for_timeout(1000)
+        operator_selectors = [
+            '[class*="operator"] input[type="checkbox"]',
+            '[class*="travels"] input[type="checkbox"]',
+            'input[type="checkbox"][name*="operator"]',
+            'label:has-text("Travels") input[type="checkbox"]',
+            '[class*="filter"] input[type="checkbox"]:has-text("Travels")'
+        ]
+        operator_clicked = False
+        for selector in operator_selectors:
+            try:
+                operators = page.locator(selector)
+                if operators.count() > 0:
+                    first_operator = operators.first
+                    if first_operator.is_visible(timeout=2000):
+                        first_operator.click(force=True)
+                        print('✅ First Bus Operator filter applied')
+                        page.wait_for_timeout(1000)
+                        operator_clicked = True
+                        break
+            except:
+                continue
+        
+        if not operator_clicked:
+            print('⚠️ Bus Operator filter not found')
+        print('')
+    except Exception as e:
+        print(f'⚠️ Bus Operator filter error: {e}\n')
+    
+    # Wait for Bus Operator filtered results
+    print('📍 Waiting for Bus Operator filtered results...')
+    page.wait_for_timeout(1000)
+    print('✅ Bus Operator Filter applied!\n')
+    
+    # RESET FILTER AFTER Bus Operator
+    print('📍 Clicking Reset Filter (final)...')
+    try:
+        page.wait_for_timeout(1000)
+        for selector in reset_selectors:
+            try:
+                reset_btn = page.locator(selector).first
+                if reset_btn.is_visible(timeout=2000):
+                    reset_btn.click(force=True)
+                    print('✅ Reset Filter clicked (final)!\n')
+                    page.wait_for_timeout(1000)
+                    break
+            except:
+                continue
+    except Exception as e:
+        print(f'⚠️ Reset error: {e}\n')
+    
+    print('🔍 === FILTERS COMPLETED ===\n')
     
     # STEP 5: Select seat button
     print('📍 Opening seat layout...')

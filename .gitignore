@@ -1,0 +1,83 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Playwright
+playwright-report/
+test-results/
+screenshots_playwright/
+*.png
+*.html
+
+# Node
+node_modules/
+package-lock.json
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+test-output.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Windows
+NTUSER.DAT*
+ntuser.dat*
+ntuser.ini
+
+# User directories
+AppData/
+Application Data/
+Contacts/
+Cookies/
+Desktop/
+Documents/
+Downloads/
+Favorites/
+Links/
+Music/
+My Documents/
+NetHood/
+OneDrive/
+Pictures/
+PrintHood/
+Recent/
+Saved Games/
+Searches/
+SendTo/
+Start Menu/
+Templates/
+Videos/
+Local Settings/
+
+# Project specific
+AndroidStudioProjects/
+IntelGraphicsProfiles/
+Katalon Studio/
+Postman/
+.android/
+.cache/
+.config/
+.copilot/
+.embedmongo/
+.gemini/
+.gitconfig/
+.gradle/
+.katalon/
+.lesshst/
+.wdm/
+
+# Text files (documentation kept)
+BOARDING_DROPPING_IMPLEMENTATION.txt
+SOLUTION_SUMMARY.txt

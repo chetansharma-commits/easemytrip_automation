@@ -10,7 +10,7 @@ def setup(page: Page):
     page.goto('https://www.easemytrip.com/bus/', wait_until='domcontentloaded')
     import re
     expect(page).to_have_url(re.compile(r'.*easemytrip\.com/bus/.*'))
-    page.wait_for_timeout(3000)
+    page.wait_for_timeout(300)
     yield page
 
 
@@ -21,7 +21,7 @@ def select_city(page: Page, input_selector: str, city_name: str):
     city_input.fill(city_name)
     page.wait_for_selector('.auto-sugg-pre ul li', state='visible')
     page.locator(f'.auto-sugg-pre ul li:has-text("{city_name}")').first.click()
-    page.wait_for_timeout(1000)
+    page.wait_for_timeout(300)
 
 
 def test_tc_005_click_search_button(setup):
@@ -32,13 +32,13 @@ def test_tc_005_click_search_button(setup):
     # STEP 1: Source city
     print('📍 Selecting Delhi...')
     select_city(page, '#txtSrcCity', 'Delhi')
-    page.wait_for_timeout(2000)
+    page.wait_for_timeout(300)
     print('✅ Delhi selected\n')
     
     # STEP 2: Destination city
     print('📍 Selecting Jaipur...')
     select_city(page, '#txtDesCity', 'Jaipur')
-    page.wait_for_timeout(2000)
+    page.wait_for_timeout(300)
     print('✅ Jaipur selected\n')
     
     # STEP 3: Date
@@ -46,12 +46,12 @@ def test_tc_005_click_search_button(setup):
     date_picker = page.locator('#datepicker')
     expect(date_picker).to_be_visible()
     date_picker.click()
-    page.wait_for_timeout(1000)
+    page.wait_for_timeout(200)
     
     future_date = datetime.now() + timedelta(days=5)
     day = future_date.day
     page.locator(f'.ui-state-default:has-text("{day}")').first.click()
-    page.wait_for_timeout(2000)
+    page.wait_for_timeout(300)
     print(f'✅ Date selected: {day}\n')
     
     # STEP 4: Search
@@ -60,7 +60,7 @@ def test_tc_005_click_search_button(setup):
     expect(search_button).to_be_visible()
     search_button.click()
     page.wait_for_url(re.compile(r'.*easemytrip\.com/home/list.*'), timeout=60000)
-    page.wait_for_timeout(3000)
+    page.wait_for_timeout(300)
     print('✅ Bus list loaded\n')
     
     # ===== FILTERS SECTION =====
@@ -69,7 +69,7 @@ def test_tc_005_click_search_button(setup):
     # FILTER: AC Bus Type Only
     print('📍 Applying AC Bus filter...')
     try:
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(300)
         
         # Try to find and click AC bus filter
         ac_selectors = [
@@ -85,7 +85,7 @@ def test_tc_005_click_search_button(setup):
                 if ac_option.is_visible(timeout=2000):
                     ac_option.click(force=True)
                     print('✅ AC Bus filter applied')
-                    page.wait_for_timeout(1000)
+                    page.wait_for_timeout(300)
                     break
             except:
                 continue
@@ -96,13 +96,13 @@ def test_tc_005_click_search_button(setup):
     
     # Wait for filtered results to load
     print('📍 Waiting for filtered results...')
-    page.wait_for_timeout(1000)
+    page.wait_for_timeout(200)
     print('✅ Filter applied successfully!\n')
     
     # VERIFY AC FILTER: Check if all buses in listing have AC/A/C
     print('📍 Verifying AC buses in listing...')
     try:
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(300)
         
         # Find all bus listings
         bus_listings = page.locator('[class*="bus"], [class*="list-item"], .result-item, div[ng-repeat]').all()
@@ -150,7 +150,7 @@ def test_tc_005_click_search_button(setup):
     # RESET FILTER AFTER AC
     print('📍 Clicking Reset Filter...')
     try:
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(500)
         reset_selectors = [
             'button:has-text("Reset")',
             'a:has-text("Reset")',
@@ -164,7 +164,7 @@ def test_tc_005_click_search_button(setup):
                 if reset_btn.is_visible(timeout=2000):
                     reset_btn.click(force=True)
                     print('✅ Reset Filter clicked!\n')
-                    page.wait_for_timeout(1000)
+                    page.wait_for_timeout(500)
                     break
             except:
                 continue
@@ -174,7 +174,7 @@ def test_tc_005_click_search_button(setup):
     # FILTER: Non-AC Bus Type
     print('📍 Applying Non-AC Bus filter...')
     try:
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(300)
         non_ac_selectors = [
             'input[type="checkbox"][value*="Non AC"]',
             'label:has-text("Non AC")',
@@ -186,7 +186,7 @@ def test_tc_005_click_search_button(setup):
                 if non_ac_option.is_visible(timeout=2000):
                     non_ac_option.click(force=True)
                     print('✅ Non-AC Bus filter applied')
-                    page.wait_for_timeout(1000)
+                    page.wait_for_timeout(300)
                     break
             except:
                 continue
@@ -196,13 +196,13 @@ def test_tc_005_click_search_button(setup):
     
     # Wait for Non-AC filtered results
     print('📍 Waiting for Non-AC filtered results...')
-    page.wait_for_timeout(1000)
+    page.wait_for_timeout(200)
     print('✅ Non-AC Filter applied!\n')
     
     # VERIFY Non-AC FILTER
     print('📍 Verifying Non-AC buses...')
     try:
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(300)
         bus_listings = page.locator('[class*="bus"], [class*="list-item"], .result-item, div[ng-repeat]').all()
         if len(bus_listings) > 0:
             ac_count = 0
@@ -239,14 +239,14 @@ def test_tc_005_click_search_button(setup):
     # RESET FILTER AFTER Non-AC
     print('📍 Clicking Reset Filter (final)...')
     try:
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(500)
         for selector in reset_selectors:
             try:
                 reset_btn = page.locator(selector).first
                 if reset_btn.is_visible(timeout=2000):
                     reset_btn.click(force=True)
                     print('✅ Reset Filter clicked (final)!\n')
-                    page.wait_for_timeout(1000)
+                    page.wait_for_timeout(500)
                     break
             except:
                 continue
@@ -256,7 +256,7 @@ def test_tc_005_click_search_button(setup):
     # FILTER: Sleeper Bus Type
     print('📍 Applying Sleeper Bus filter...')
     try:
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(300)
         sleeper_selectors = [
             'input[type="checkbox"][value*="Sleeper"]',
             'label:has-text("Sleeper")',
@@ -269,7 +269,7 @@ def test_tc_005_click_search_button(setup):
                 if sleeper_option.is_visible(timeout=2000):
                     sleeper_option.click(force=True)
                     print('✅ Sleeper Bus filter applied')
-                    page.wait_for_timeout(1000)
+                    page.wait_for_timeout(300)
                     break
             except:
                 continue
@@ -279,20 +279,20 @@ def test_tc_005_click_search_button(setup):
     
     # Wait for Sleeper filtered results
     print('📍 Waiting for Sleeper filtered results...')
-    page.wait_for_timeout(1000)
+    page.wait_for_timeout(200)
     print('✅ Sleeper Filter applied!\n')
     
     # RESET FILTER AFTER Sleeper
     print('📍 Clicking Reset Filter...')
     try:
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(500)
         for selector in reset_selectors:
             try:
                 reset_btn = page.locator(selector).first
                 if reset_btn.is_visible(timeout=2000):
                     reset_btn.click(force=True)
                     print('✅ Reset Filter clicked!\n')
-                    page.wait_for_timeout(1000)
+                    page.wait_for_timeout(500)
                     break
             except:
                 continue
@@ -302,7 +302,7 @@ def test_tc_005_click_search_button(setup):
     # FILTER: Seater Bus Type
     print('📍 Applying Seater Bus filter...')
     try:
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(300)
         seater_selectors = [
             'input[type="checkbox"][value*="Seater"]',
             'label:has-text("Seater")',
@@ -315,7 +315,7 @@ def test_tc_005_click_search_button(setup):
                 if seater_option.is_visible(timeout=2000):
                     seater_option.click(force=True)
                     print('✅ Seater Bus filter applied')
-                    page.wait_for_timeout(1000)
+                    page.wait_for_timeout(300)
                     break
             except:
                 continue
@@ -325,20 +325,20 @@ def test_tc_005_click_search_button(setup):
     
     # Wait for Seater filtered results
     print('📍 Waiting for Seater filtered results...')
-    page.wait_for_timeout(1000)
+    page.wait_for_timeout(200)
     print('✅ Seater Filter applied!\n')
     
     # RESET FILTER AFTER Seater
     print('📍 Clicking Reset Filter (final)...')
     try:
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(500)
         for selector in reset_selectors:
             try:
                 reset_btn = page.locator(selector).first
                 if reset_btn.is_visible(timeout=2000):
                     reset_btn.click(force=True)
                     print('✅ Reset Filter clicked (final)!\n')
-                    page.wait_for_timeout(1000)
+                    page.wait_for_timeout(500)
                     break
             except:
                 continue
@@ -348,7 +348,7 @@ def test_tc_005_click_search_button(setup):
     # FILTER: Bus Operator - Click First Operator
     print('📍 Applying Bus Operator filter (first operator)...')
     try:
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(300)
         operator_selectors = [
             '[class*="operator"] input[type="checkbox"]',
             '[class*="travels"] input[type="checkbox"]',
@@ -365,7 +365,7 @@ def test_tc_005_click_search_button(setup):
                     if first_operator.is_visible(timeout=2000):
                         first_operator.click(force=True)
                         print('✅ First Bus Operator filter applied')
-                        page.wait_for_timeout(1000)
+                        page.wait_for_timeout(300)
                         operator_clicked = True
                         break
             except:
@@ -379,20 +379,20 @@ def test_tc_005_click_search_button(setup):
     
     # Wait for Bus Operator filtered results
     print('📍 Waiting for Bus Operator filtered results...')
-    page.wait_for_timeout(1000)
+    page.wait_for_timeout(200)
     print('✅ Bus Operator Filter applied!\n')
     
     # RESET FILTER AFTER Bus Operator
     print('📍 Clicking Reset Filter (final)...')
     try:
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(500)
         for selector in reset_selectors:
             try:
                 reset_btn = page.locator(selector).first
                 if reset_btn.is_visible(timeout=2000):
                     reset_btn.click(force=True)
                     print('✅ Reset Filter clicked (final)!\n')
-                    page.wait_for_timeout(1000)
+                    page.wait_for_timeout(500)
                     break
             except:
                 continue
@@ -406,13 +406,16 @@ def test_tc_005_click_search_button(setup):
     select_seat_button = page.locator('button:has-text("Select Seat"), a:has-text("Select Seat")').first
     expect(select_seat_button).to_be_visible(timeout=20000)
     select_seat_button.click()
-    page.wait_for_timeout(3000)
+    page.wait_for_timeout(2000)
     print('✅ Seat layout opened\n')
     
     # STEP 6: Select any ONE available seat (DYNAMIC - avoid booked/grey seats)
     print('📍 Selecting any available seat...')
     
     seat_clicked = False
+    
+    # Wait for seat layout to fully load
+    page.wait_for_timeout(2000)
     
     # Try multiple strategies to find and select available seats only
     strategies = [
@@ -443,13 +446,13 @@ def test_tc_005_click_search_button(setup):
             break
             
         try:
-            page.wait_for_timeout(1000)
+            page.wait_for_timeout(500)
             seats = page.locator(strategy['selector'])
             total = seats.count()
             
             if total > 0:
-                # Try first few visible seats
-                for i in range(min(total, 5)):
+                # Try first 10 visible seats
+                for i in range(min(total, 10)):
                     try:
                         seat = seats.nth(i)
                         
@@ -461,11 +464,20 @@ def test_tc_005_click_search_button(setup):
                             if any(word in seat_classes.lower() for word in ['booked', 'grey', 'disabled', 'blocked', 'unavailable']):
                                 continue
                             
+                            # Scroll into view first
+                            seat.scroll_into_view_if_needed()
+                            page.wait_for_timeout(500)
+                            
+                            # Click the seat
                             seat.click(force=True)
                             page.wait_for_timeout(1500)
-                            print('✅ ONE SEAT SELECTED\n')
-                            seat_clicked = True
-                            break
+                            
+                            # Verify seat is selected - check if class changed or selected class added
+                            seat_classes_after = seat.get_attribute('class') or ''
+                            if 'select' in seat_classes_after.lower() or seat_classes_after != seat_classes:
+                                print('✅ ONE SEAT SELECTED\n')
+                                seat_clicked = True
+                                break
                     except:
                         continue
                 
@@ -481,7 +493,7 @@ def test_tc_005_click_search_button(setup):
     print('📍 Selecting BOARDING & DROPPING points...')
     
     try:
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(300)
         
         # Find all clickable labels with ng-click
         labels = page.locator('label[ng-click]')
@@ -503,11 +515,11 @@ def test_tc_005_click_search_button(setup):
                     if not boarding_clicked:
                         print('✅ BOARDING POINT SELECTED!')
                         boarding_clicked = True
-                        page.wait_for_timeout(500)
+                        page.wait_for_timeout(200)
                     elif not dropping_clicked:
                         print('✅ DROPPING POINT SELECTED!\n')
                         dropping_clicked = True
-                        page.wait_for_timeout(500)
+                        page.wait_for_timeout(200)
                         break
             except:
                 continue
@@ -520,7 +532,7 @@ def test_tc_005_click_search_button(setup):
     # STEP 9: Continue
     print('📍 Clicking Continue...')
     try:
-        page.wait_for_timeout(3000)
+        page.wait_for_timeout(300)
         
         # Try multiple selectors for continue button
         continue_selectors = [
@@ -559,7 +571,7 @@ def test_tc_005_click_search_button(setup):
     # STEP 10: Fill passenger details
     print('📍 Filling passenger details...')
     try:
-        page.wait_for_timeout(3000)
+        page.wait_for_timeout(300)
         
         # Select title as "Mr"
         print('   Selecting title: Mr')
@@ -580,7 +592,7 @@ def test_tc_005_click_search_button(setup):
             except:
                 continue
         
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(300)
         
         # Fill first name as "test"
         print('   Filling first name: test')
@@ -601,7 +613,7 @@ def test_tc_005_click_search_button(setup):
             except:
                 continue
         
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(300)
         
         # Fill last name as "test"
         print('   Filling last name: test')
@@ -622,7 +634,7 @@ def test_tc_005_click_search_button(setup):
             except:
                 continue
         
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(300)
         
         # Fill age as "25"
         print('   Filling age: 25')
@@ -647,7 +659,7 @@ def test_tc_005_click_search_button(setup):
             except:
                 continue
         
-        page.wait_for_timeout(2000)
+        page.wait_for_timeout(200)
         
     except Exception as e:
         print(f'⚠️ Error filling details: {e}\n')
@@ -655,7 +667,7 @@ def test_tc_005_click_search_button(setup):
     # STEP 11: Select insurance - Yes
     print('📍 Selecting insurance: Yes')
     try:
-        page.wait_for_timeout(2000)
+        page.wait_for_timeout(200)
         
         # Try multiple selectors for insurance Yes option
         insurance_selectors = [
@@ -676,7 +688,7 @@ def test_tc_005_click_search_button(setup):
             except:
                 continue
         
-        page.wait_for_timeout(2000)
+        page.wait_for_timeout(200)
         
     except Exception as e:
         print(f'⚠️ Error selecting insurance: {e}\n')
@@ -684,7 +696,7 @@ def test_tc_005_click_search_button(setup):
     # STEP 12: Select insurance condition checkbox
     print('📍 Selecting insurance condition...')
     try:
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(300)
         
         # Try to find and click insurance condition checkbox
         condition_selectors = [
@@ -705,7 +717,7 @@ def test_tc_005_click_search_button(setup):
             except:
                 continue
         
-        page.wait_for_timeout(2000)
+        page.wait_for_timeout(200)
         
     except Exception as e:
         print(f'⚠️ Error selecting insurance condition: {e}\n')
@@ -713,7 +725,7 @@ def test_tc_005_click_search_button(setup):
     # STEP 13: Fill email
     print('📍 Filling email: cs@gmail.com')
     try:
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(300)
         
         # Try multiple selectors for email field
         email_selectors = [
@@ -734,7 +746,7 @@ def test_tc_005_click_search_button(setup):
             except:
                 continue
         
-        page.wait_for_timeout(2000)
+        page.wait_for_timeout(200)
         
     except Exception as e:
         print(f'⚠️ Error filling email: {e}\n')
@@ -742,7 +754,7 @@ def test_tc_005_click_search_button(setup):
     # STEP 14: Fill mobile number
     print('📍 Filling mobile number: 8445121366')
     try:
-        page.wait_for_timeout(2000)
+        page.wait_for_timeout(200)
         
         # Try multiple selectors for mobile field (avoid country code dropdown)
         mobile_selectors = [
@@ -783,7 +795,7 @@ def test_tc_005_click_search_button(setup):
                                 
                                 # Type the number
                                 mobile_field.type('8445121366', delay=50)
-                                page.wait_for_timeout(1000)
+                                page.wait_for_timeout(300)
                                 
                                 # Verify it was entered
                                 value = mobile_field.input_value()
@@ -802,7 +814,7 @@ def test_tc_005_click_search_button(setup):
         if not mobile_filled:
             print('⚠️ Mobile field not found or not filled properly\n')
         
-        page.wait_for_timeout(2000)
+        page.wait_for_timeout(200)
         
     except Exception as e:
         print(f'⚠️ Error filling mobile: {e}\n')
@@ -810,11 +822,11 @@ def test_tc_005_click_search_button(setup):
     # STEP 15: Click Continue to go to next page
     print('📍 Clicking Continue to next page...')
     try:
-        page.wait_for_timeout(3000)
+        page.wait_for_timeout(300)
         
         # Scroll to bottom to ensure button is visible
         page.evaluate('window.scrollTo(0, document.body.scrollHeight)')
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(300)
         
         # Try multiple selectors for continue button
         continue_selectors = [
@@ -847,7 +859,7 @@ def test_tc_005_click_search_button(setup):
                                 btn_text = btn.text_content()
                                 print(f'   Found button with text: {btn_text}')
                                 btn.scroll_into_view_if_needed()
-                                page.wait_for_timeout(500)
+                                page.wait_for_timeout(200)
                                 btn.click(force=True)
                                 print('✅ Continue clicked!\n')
                                 continue_clicked = True
@@ -870,61 +882,95 @@ def test_tc_005_click_search_button(setup):
         if not continue_clicked:
             print('⚠️ Continue button not found')
             
-        page.wait_for_timeout(3000)
+        page.wait_for_timeout(300)
         
     except Exception as e:
         print(f'⚠️ Error clicking continue: {e}\n')
     
-    # STEP 16: Click on Wallet option
-    print('📍 Selecting Wallet payment option...')
+    # STEP 16: Click on Wallets payment option
+    print('📍 Selecting Wallets payment option...')
     try:
         page.wait_for_timeout(5000)
         
-        # Scroll to payment section
-        page.evaluate('window.scrollTo(0, 0)')
-        page.wait_for_timeout(300)
-        page.evaluate('window.scrollBy(0, 400)')
-        page.wait_for_timeout(200)
-        
-        # Debug: Print all available payment options
-        print('   --- Available payment options ---')
-        try:
-            all_lis = page.locator('li').all()
-            for idx, li in enumerate(all_lis[:20]):  # Check first 20 li elements
-                try:
-                    text = li.text_content() or ''
-                    if any(word in text.lower() for word in ['payment', 'wallet', 'card', 'upi', 'net']):
-                        print(f'   Li {idx}: {text[:80]}')
-                except:
-                    pass
-        except:
-            pass
-        print('   --- End of payment options ---')
-        
-        # Take screenshot
-        page.screenshot(path='payment-options.png')
-        
         wallet_clicked = False
         
-        # Try to find and click Wallet
+        # Silently check if More button needs to be clicked first
         try:
-            # Method 1: Find by exact text match
-            wallet_element = page.get_by_role('listitem').filter(has_text='Wallet').first
-            if wallet_element:
-                wallet_element.click(force=True, timeout=3000)
-                page.wait_for_timeout(200)
-                print('✅ Wallet option selected\n')
-                wallet_clicked = True
-        except Exception as e:
-            print(f'   Method 1 failed: {str(e)[:100]}')
+            more_btn = page.locator('li:has-text("More")').first
+            if more_btn.is_visible(timeout=1000):
+                more_btn.scroll_into_view_if_needed()
+                page.wait_for_timeout(500)
+                more_btn.click(force=True)
+                page.wait_for_timeout(2000)
+        except:
+            pass
         
+        # Now click on Wallets directly
+        element_types = ['span', 'div', 'li', 'label', 'a']
+        
+        for elem_type in element_types:
+            try:
+                selector = f'{elem_type}:has-text("Wallets")'
+                elements = page.locator(selector).all()
+                
+                for elem in elements:
+                    try:
+                        text = elem.text_content() or ''
+                        if len(text.strip()) < 30 and text.strip() == 'Wallets':
+                            elem.scroll_into_view_if_needed(timeout=2000)
+                            page.wait_for_timeout(500)
+                            elem.click(timeout=2000)
+                            wallet_clicked = True
+                            page.wait_for_timeout(1000)
+                            break
+                    except:
+                        try:
+                            elem.click(force=True, timeout=2000)
+                            wallet_clicked = True
+                            page.wait_for_timeout(1000)
+                            break
+                        except:
+                            continue
+                
+                if wallet_clicked:
+                    break
+                    
+            except:
+                continue
+        
+        # JavaScript fallback
         if not wallet_clicked:
-            print('⚠️ Wallet option not clickable or not found\n')
+            try:
+                result = page.evaluate("""
+                    () => {
+                        const allElements = document.querySelectorAll('li, a, button, div, span, label');
+                        for (let elem of allElements) {
+                            const text = elem.textContent || '';
+                            if (text.trim() === 'Wallets') {
+                                elem.scrollIntoView({behavior: 'smooth', block: 'center'});
+                                elem.click();
+                                return {success: true};
+                            }
+                        }
+                        return {success: false};
+                    }
+                """)
+                
+                if result.get('success'):
+                    wallet_clicked = True
+                    page.wait_for_timeout(1000)
+            except:
+                pass
         
-        page.wait_for_timeout(200)
+        if wallet_clicked:
+            print('✅ Wallets clicked\n')
+        else:
+            print('⚠️ Wallets not found\n')
+        
+        page.wait_for_timeout(1000)
         
     except Exception as e:
-        print(f'⚠️ Error selecting wallet: {e}\n')
+        print(f'⚠️ Error selecting Wallets: {e}\n')
     
     # STEP 17: Select Bajaj Pay
     print('📍 Selecting Bajaj Pay...')

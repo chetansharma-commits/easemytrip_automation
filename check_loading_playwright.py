@@ -1,5 +1,6 @@
+import os
 import pytest
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Page, expect, sync_playwright
 from datetime import datetime, timedelta
 import time
 import re
@@ -1008,3 +1009,61 @@ def test_tc_005_click_search_button(setup):
         print(f'⚠️ Error selecting Bajaj Pay: {e}\n')
     
     print('🎉 === BOOKING FLOW COMPLETED ===\n')
+
+    # Keep the browser open for manual inspection when debugging.
+    if os.getenv('EMT_PAUSE_AT_END', '').lower() in {'1', 'true', 'yes'}:
+        print('⏸️ Paused at end (EMT_PAUSE_AT_END=1). Press Ctrl+C in terminal to stop.')
+        page.wait_for_timeout(10_000_000)
+
+
+def run_visual_demo():
+    """Run the complete booking flow in a visible browser (no pytest runner)."""
+    slowmo = int(os.getenv("EMT_SLOWMO", "200"))
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=False, slow_mo=slowmo)
+        context = browser.new_context(viewport={"width": 1400, "height": 900})
+        page = context.new_page()
+
+        page.goto('https://www.easemytrip.com/bus/', wait_until='domcontentloaded')
+        page.wait_for_timeout(500)
+
+        print('\n🚌 === VISUAL COMPLETE FLOW STARTING ===\n')
+
+        try:
+            # Reuse the existing full-flow logic by calling the test function directly.
+            test_tc_005_click_search_button(page)
+        except Exception as e:
+            print(f"\n❌ Visual run failed: {e}\n")
+            # On failure, keep browser open for inspection unless user disables it.
+            if os.getenv('EMT_NO_PAUSE_ON_ERROR', '').lower() not in {'1', 'true', 'yes'}:
+                print('⏸️ Paused on error. Close browser window or press Ctrl+C to stop.')
+                page.wait_for_timeout(10_000_000)
+            raise
+
+        # If you want to keep the browser open at the very end:
+        if os.getenv('EMT_PAUSE_AT_END', '').lower() in {'1', 'true', 'yes'}:
+            print('⏸️ Paused at end (EMT_PAUSE_AT_END=1). Close browser window or press Ctrl+C to stop.')
+            page.wait_for_timeout(10_000_000)
+
+
+if __name__ == "__main__":
+    # Default: run a visual demo (stable, no pytest plugin lifecycle).
+    # If you want to run the pytest test instead, set EMT_RUN_PYTEST=1.
+    if os.getenv('EMT_RUN_PYTEST', '').lower() in {'1', 'true', 'yes'}:
+        import sys
+
+        args = [
+            "-s",  # show print() output
+            os.path.abspath(__file__),
+            "--headed",
+            "--slowmo=200",
+            "--browser=chromium",
+            "--tracing=retain-on-failure",
+            "--video=retain-on-failure",
+            "--screenshot=only-on-failure",
+            "--output=playwright-artifacts",
+        ]
+        sys.exit(pytest.main(args))
+
+    run_visual_demo()

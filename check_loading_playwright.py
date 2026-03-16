@@ -1013,7 +1013,10 @@ def test_tc_005_click_search_button(setup):
     # Keep the browser open for manual inspection when debugging.
     if os.getenv('EMT_PAUSE_AT_END', '').lower() in {'1', 'true', 'yes'}:
         print('⏸️ Paused at end (EMT_PAUSE_AT_END=1). Press Ctrl+C in terminal to stop.')
-        page.wait_for_timeout(10_000_000)
+        try:
+            page.wait_for_timeout(10_000_000)
+        except Exception:
+            pass
 
 
 def run_visual_demo():
@@ -1038,13 +1041,19 @@ def run_visual_demo():
             # On failure, keep browser open for inspection unless user disables it.
             if os.getenv('EMT_NO_PAUSE_ON_ERROR', '').lower() not in {'1', 'true', 'yes'}:
                 print('⏸️ Paused on error. Close browser window or press Ctrl+C to stop.')
-                page.wait_for_timeout(10_000_000)
+                try:
+                    page.wait_for_timeout(10_000_000)
+                except Exception:
+                    pass
             raise
 
         # If you want to keep the browser open at the very end:
         if os.getenv('EMT_PAUSE_AT_END', '').lower() in {'1', 'true', 'yes'}:
             print('⏸️ Paused at end (EMT_PAUSE_AT_END=1). Close browser window or press Ctrl+C to stop.')
-            page.wait_for_timeout(10_000_000)
+            try:
+                page.wait_for_timeout(10_000_000)
+            except Exception:
+                pass
 
 
 if __name__ == "__main__":

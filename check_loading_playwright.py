@@ -1034,8 +1034,15 @@ def run_visual_demo():
         print('\n🚌 === VISUAL COMPLETE FLOW STARTING ===\n')
 
         try:
-            # Reuse the existing full-flow logic by calling the test function directly.
-            test_tc_005_click_search_button(page)
+            # Call the actual test function - it's already complete!
+            # Just pass page wrapped in a simple object that mimics the setup fixture
+            class PageWrapper:
+                def __init__(self, pg):
+                    self._page = pg
+                def __getattr__(self, name):
+                    return getattr(self._page, name)
+            
+            test_tc_005_click_search_button(PageWrapper(page))
         except Exception as e:
             print(f"\n❌ Visual run failed: {e}\n")
             # On failure, keep browser open for inspection unless user disables it.

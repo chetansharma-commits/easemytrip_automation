@@ -16,32 +16,47 @@ def setup(page: Page):
 
 
 def select_city(page: Page, input_selector: str, city_name: str):
-    """Helper function to handle city input and selection"""
+    """Helper: fast city input and selection."""
+    city_input = page.locator(input_selector)
+    city_input.click()
+    city_input.fill(city_name)
+    page.wait_for_selector('.auto-sugg-pre ul li', state='visible', timeout=10000)
+    page.locator(f'.auto-sugg-pre ul li:has-text("{city_name}")').first.click()
+
+
+def click_reset(page: Page):
+    """Click reset filter button."""
     try:
-        city_input = page.locator(input_selector)
-        expect(city_input).to_be_visible(timeout=10000)
-        city_input.click()
-        page.wait_for_timeout(500)
-        city_input.fill(city_name)
-        page.wait_for_timeout(1000)
-        page.wait_for_selector('.auto-sugg-pre ul li', state='visible', timeout=15000)
-        page.locator(f'.auto-sugg-pre ul li:has-text("{city_name}")').first.click()
-        page.wait_for_timeout(500)
-    except Exception as e:
-        print(f"Error selecting city {city_name}: {e}")
-        page.screenshot(path=f"error-{city_name}.png")
-        raise
+        for sel in ['button:has-text("Reset")', 'a:has-text("Reset")', '[class*="reset"]']:
+            btn = page.locator(sel).first
+            if btn.count() > 0 and btn.is_visible(timeout=1000):
+                btn.click(force=True)
+                return
+    except:
+        pass
+
+
+def apply_filter(page: Page, selectors: list):
+    """Click first matching visible filter checkbox/label."""
+    for sel in selectors:
+        try:
+            el = page.locator(sel).first
+            if el.count() > 0 and el.is_visible(timeout=1500):
+                el.click(force=True)
+                return True
+        except:
+            continue
+    return False
 
 
 def test_tc_005_click_search_button(setup):
     page = setup
-    
+
     print('\n🚌 === BUS BOOKING AUTOMATION STARTING ===\n')
-    
+
     # STEP 1: Source city
     print('📍 Selecting Delhi...')
     select_city(page, '#txtSrcCity', 'Delhi')
-    page.wait_for_timeout(300)
     print('✅ Delhi selected\n')
     
     # STEP 2: Destination city
@@ -984,38 +999,111 @@ def test_tc_005_click_search_button(setup):
     # STEP 17: Select Bajaj Pay
     print('📍 Selecting Bajaj Pay...')
     try:
-        page.wait_for_timeout(200)
-        
-        bajaj_selectors = [
-            'label:has-text("Bajaj")',
-            'div:has-text("Bajaj Pay")',
-            'span:has-text("Bajaj")',
-            'input[value*="Bajaj"][type="radio"]',
-            'input[value*="bajaj"][type="radio"]',
-            '[id*="bajaj"]',
-            '[name*="bajaj"]'
-        ]
-        
+        page.wait_for_timeout(1000)
         bajaj_clicked = False
-        for selector in bajaj_selectors:
-            try:
-                bajaj_option = page.locator(selector).first
-                if bajaj_option.is_visible(timeout=2000):
-                    bajaj_option.click(force=True)
-                    print('✅ Bajaj Pay selected\n')
-                    bajaj_clicked = True
-                    break
-            except:
-                continue
-        
+
+        # Exact id from page inspection: id="rdoBajaj Pay"
+        try:
+            radio = page.locator('[id="rdoBajaj Pay"]').first
+            if radio.count() > 0:
+                radio.click(force=True)
+                print('✅ Bajaj Pay radio button clicked\n')
+                bajaj_clicked = True
+        except:
+            pass
+
+        # Fallback: JS click using exact id
         if not bajaj_clicked:
-            print('⚠️ Bajaj Pay option not found\n')
-        
-        page.wait_for_timeout(200)
-        
+            try:
+                result = page.evaluate("""() => {
+                    const radio = document.getElementById('rdoBajaj Pay');
+                    if (radio) { radio.click(); return 'radio_clicked'; }
+                    const all = Array.from(document.querySelectorAll('input[type="radio"]'));
+                    for (const r of all) {
+                        if ((r.value || '').toLowerCase().includes('bajaj') ||
+                            (r.id || '').toLowerCase().includes('bajaj')) {
+                            r.click();
+                            return 'fallback_clicked';
+                        }
+                    }
+                    return 'not_found';
+                }""")
+                if result in ('radio_clicked', 'fallback_clicked'):
+                    print(f'✅ Bajaj Pay selected via JS ({result})\n')
+                    bajaj_clicked = True
+            except:
+                pass
+
+        if not bajaj_clicked:
+            print('⚠️ Bajaj Pay radio button not found\n')
+
+        page.wait_for_timeout(1500)
+
     except Exception as e:
         print(f'⚠️ Error selecting Bajaj Pay: {e}\n')
     
+    # STEP 18: Click Make Payment button
+    print('📍 Clicking Make Payment button...')
+    try:
+        # Wait for pp_paybtn to become visible after Bajaj Pay section expands
+        try:
+            page.wait_for_selector('a.pp_paybtn', state='visible', timeout=5000)
+            print('   pp_paybtn is now visible')
+        except:
+            page.wait_for_timeout(2000)
+
+        payment_clicked = False
+
+        # Try visible pp_paybtn first (not force)
+        try:
+            btns = page.locator('a.pp_paybtn').all()
+            for btn in btns:
+                if btn.is_visible(timeout=1000):
+                    btn.scroll_into_view_if_needed()
+                    btn.click()
+                    print('✅ Make Payment button clicked! (visible pp_paybtn)\n')
+                    payment_clicked = True
+                    break
+        except:
+            pass
+
+        # Force click pp_paybtn if not visible yet
+        if not payment_clicked:
+            try:
+                page.locator('a.pp_paybtn').first.click(force=True)
+                print('✅ Make Payment button clicked! (force pp_paybtn)\n')
+                payment_clicked = True
+            except:
+                pass
+
+        # JS: click visible Make Payment button
+        if not payment_clicked:
+            result = page.evaluate("""() => {
+                const btns = document.querySelectorAll('a.pp_paybtn');
+                for (const btn of btns) {
+                    if (btn.offsetParent !== null) {
+                        btn.scrollIntoView({block:'center'});
+                        btn.click();
+                        return 'visible_pp_paybtn';
+                    }
+                }
+                // fallback: click any pp_paybtn
+                const btn = document.querySelector('a.pp_paybtn');
+                if (btn) { btn.click(); return 'force_pp_paybtn'; }
+                return null;
+            }""")
+            if result:
+                print(f'✅ Make Payment clicked via JS ({result})\n')
+                payment_clicked = True
+
+        if not payment_clicked:
+            print('⚠️ Make Payment button not found\n')
+
+        page.wait_for_timeout(3000)
+
+    except Exception as e:
+        print(f'⚠️ Error clicking Make Payment: {e}\n')
+
     print('🎉 === BOOKING FLOW COMPLETED ===\n')
 
     # Keep the browser open for manual inspection when debugging.
